@@ -344,6 +344,11 @@ Contributors:
                         <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>net.revelc.code.formatter</groupId>
+                    <artifactId>formatter-maven-plugin</artifactId>
+                    <version>2.7.3</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -376,7 +381,22 @@ Contributors:
                         </configuration>
                      </execution>
                  </executions>
-             </plugin>
+            </plugin>
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>validate</goal>
+                        </goals>
+                        <configuration>
+                            <configFile>eclipse/eclipse-code-style.xml</configFile>
+                            <lineEnding>LF</lineEnding>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
