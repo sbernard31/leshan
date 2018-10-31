@@ -49,6 +49,7 @@ import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
@@ -58,7 +59,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.core.network.config.NetworkConfig;
+import org.eclipse.californium.scandium.DTLSConnector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -426,5 +429,17 @@ public class LeshanServerDemo {
         lwServer.start();
         server.start();
         LOG.info("Web server started at {}.", server.getURI());
+
+        // Change the location through the Console
+        try (Scanner scanner = new Scanner(System.in)) {
+            while (scanner.hasNext()) {
+                String command = scanner.next();
+                if ("clear".equalsIgnoreCase(command)) {
+                    ((DTLSConnector) ((CoapEndpoint) lwServer.coap().getServer()
+                            .getEndpoint(lwServer.getSecuredAddress())).getConnector()).clearConnectionState();
+                    LOG.info("DTLS Connections cleared");
+                }
+            }
+        }
     }
 }
