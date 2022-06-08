@@ -315,6 +315,16 @@ Contributors:
                     </configuration>
                 </plugin>
                 <plugin>
+                    <groupId>net.revelc.code.formatter</groupId>
+                    <artifactId>formatter-maven-plugin</artifactId>
+                    <version>2.16.0</version>
+                    <configuration>
+                        <configFile>${project.basedir}/../eclipse/eclipse-code-style.xml</configFile>
+                        <lineEnding>LF</lineEnding>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.0.0-M5</version>
                     <configuration>
@@ -493,6 +503,17 @@ Contributors:
                             <goal>jar</goal>
                         </goals>
                      </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>validate</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
