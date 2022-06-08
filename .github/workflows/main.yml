@@ -1,0 +1,40 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Maven
+
+on:
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build: 
+    name : Code Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'adopt'
+        cache: maven
+    
+    - name: Build 
+      run: mvn -B package javadoc:javadoc  -DskipTests -Dskip.yarn 
+
+    - name: Unit Tests
+      run: mvn -B test '-Dtest=!org.eclipse.leshan.integration.tests.**' -DfailIfNoTests=false -Dmaven.test.failure.ignore=true -Dskip.yarn
+      
+    - name: Integration Tests
+      run: mvn -B test '-Dtest=org.eclipse.leshan.integration.tests.**,!**/Redis*.java' -Dsurefire.rerunFailingTestsCount=3 -DfailIfNoTests=false -Dmaven.test.failure.ignore=true -Dskip.yarn
+
+    - name: Report
+      uses: mikepenz/action-junit-report@v3
+      if: always()
+      with:
+          check_name: Automatic Tests Report
+          report_paths: '**/target/surefire-reports/*.xml'
+          fail_on_failure: true
