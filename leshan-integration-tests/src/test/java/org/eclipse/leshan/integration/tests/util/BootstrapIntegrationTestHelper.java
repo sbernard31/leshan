@@ -180,7 +180,7 @@ public class BootstrapIntegrationTestHelper extends SecureIntegrationTestHelper 
         BootstrapConfigStoreTaskProvider taskProvider = new BootstrapConfigStoreTaskProvider(bootstrapStore) {
             @Override
             public Tasks getTasks(BootstrapSession session, List<LwM2mResponse> previousResponses) {
-               if (previousResponses == null) {
+                if (previousResponses == null) {
                     Tasks tasks = new Tasks();
                     tasks.requestsToSend = new ArrayList<>(1);
                     tasks.requestsToSend.add(firstCustomRequest);

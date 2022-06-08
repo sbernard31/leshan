@@ -176,8 +176,7 @@ public class SecurityServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_OK);
         } else {
             resp.setContentType("application/json");
-            resp.getOutputStream()
-                    .write("{\"message\":\"not_found\"}".getBytes(StandardCharsets.UTF_8));
+            resp.getOutputStream().write("{\"message\":\"not_found\"}".getBytes(StandardCharsets.UTF_8));
             resp.setStatus(HttpServletResponse.SC_OK);
         }
     }

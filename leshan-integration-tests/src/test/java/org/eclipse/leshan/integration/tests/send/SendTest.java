@@ -53,9 +53,9 @@ public class SendTest {
     @Parameters(name = "{0}{1}")
     public static Collection<?> contentFormats() {
         return Arrays.asList(new Object[][] { //
-                                // {content format}
-                                { ContentFormat.SENML_JSON }, //
-                                { ContentFormat.SENML_CBOR } });
+                // {content format}
+                { ContentFormat.SENML_JSON }, //
+                { ContentFormat.SENML_CBOR } });
     }
 
     private ContentFormat contentformat;
