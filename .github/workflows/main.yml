@@ -21,26 +21,68 @@ jobs:
         java-version: '8'
         distribution: 'adopt'
         cache: maven
-    
-    - name: Build 
-      run: mvn --batch-mode -DskipTests -Dskip.yarn package
-    
-    - uses: LouisBrunner/checks-action@v1.2.0
-      if: success()
+
+    - name: Prepare Check Runs
+      uses: dflydev/check-runs-action@v1.0.6
       with:
-         token: ${{ secrets.GITHUB_TOKEN }}
-         name: Test Basic Success
-         conclusion: success
+       token: ${{ secrets.GITHUB_TOKEN }}
+       checks: |
+         [
+           { "id": "build", "name": "Build Code" },
+           { "id": "unitTests", "name": "Unit Tests" }
+         ]
+       status: "queued"
+
+    - name: Build Starting
+      uses: dflydev/check-runs-action@v1.0.6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        id: build
+        status: in_progress
+    - name: Build
+      id: build
+      continue-on-error: true
+      run: mvn --batch-mode -DskipTests -Dskip.yarn package
+    - name: Build Conclusion
+      uses: dflydev/check-runs-action@v1.0.6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        id: build
+        conclusion: ${{ steps.build.outcome }}
+        fail-on-error: true
     
+    
+    - name: Unit Tests Starting
+      uses: dflydev/check-runs-action@v1.0.6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        id: unitTests
+        status: in_progress
     - name: Unit Tests
+      id: unitTests
+      continue-on-error: true
       run: mvn test '-Dtest=!org.eclipse.leshan.integration.tests.**' -DfailIfNoTests=false -Dskip.yarn -Dmaven.test.failure.ignore=true
-      
+    - name: Unit Tests Conclusion
+      uses: dflydev/check-runs-action@v1.0.6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        id: unitTests
+        conclusion: ${{ steps.unitTests.outcome }}
+   
     #- name: Integration Tests
     #  run: mvn test '-Dtest=org.eclipse.leshan.integration.tests.**' -Dsurefire.rerunFailingTestsCount=3 -DfailIfNoTests=false -Dskip.yarn -Dmaven.test.failure.ignore=true
 
+
     - name: Report
-      uses: mikepenz/action-junit-report@v3
+      uses: mikepenz/action-junit-report@v3.0.3
       if: always()
       with:
           check_name: Tests Report
           report_paths: '**/target/surefire-reports/*.xml'
+
+    - name: Clean up checks
+      if: always()
+      uses: dflydev/check-runs-action@v1.0.6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        conclusion: cancelled
