@@ -90,4 +90,4 @@ jobs:
       with:
           check_name: Tests Report
           report_paths: '**/target/surefire-reports/*.xml'
-          fail-on-error: true
+          fail_on_failure: true
