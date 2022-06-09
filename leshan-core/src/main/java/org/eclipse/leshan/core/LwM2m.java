@@ -24,7 +24,7 @@ public interface LwM2m {
      */
     public class LwM2mVersion extends Version {
 
-        public satic LwM2mVersion V1_0 = new LwM2mVersion("1.0", true);
+        public static LwM2mVersion V1_0 = new LwM2mVersion("1.0", true);
         public static LwM2mVersion V1_1 = new LwM2mVersion("1.1", true);
         private static LwM2mVersion[] supportedVersions = new LwM2mVersion[] { V1_0, V1_1 };
 
