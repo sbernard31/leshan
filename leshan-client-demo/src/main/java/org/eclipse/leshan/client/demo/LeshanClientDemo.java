@@ -15,8 +15,18 @@
  *******************************************************************************/
 package org.eclipse.leshan.client.demo;
 
-import static org.eclipse.leshan.client.object.Security.*;
-import static org.eclipse.leshan.core.LwM2mId.*;
+import static org.eclipse.leshan.client.object.Security.noSec;
+import static org.eclipse.leshan.client.object.Security.noSecBootstap;
+import static org.eclipse.leshan.client.object.Security.psk;
+import static org.eclipse.leshan.client.object.Security.pskBootstrap;
+import static org.eclipse.leshan.client.object.Security.rpk;
+import static org.eclipse.leshan.client.object.Security.rpkBootstrap;
+import static org.eclipse.leshan.client.object.Security.x509;
+import static org.eclipse.leshan.client.object.Security.x509Bootstrap;
+import static org.eclipse.leshan.core.LwM2mId.DEVICE;
+import static org.eclipse.leshan.core.LwM2mId.LOCATION;
+import static org.eclipse.leshan.core.LwM2mId.SECURITY;
+import static org.eclipse.leshan.core.LwM2mId.SERVER;
 
 import java.io.File;
 import java.io.PrintWriter;

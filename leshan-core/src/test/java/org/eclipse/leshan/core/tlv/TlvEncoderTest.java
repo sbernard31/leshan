@@ -21,10 +21,6 @@ import static org.junit.Assert.assertEquals;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
-import org.eclipse.leshan.core.tlv.Tlv;
-import org.eclipse.leshan.core.tlv.TlvDecoder;
-import org.eclipse.leshan.core.tlv.TlvEncoder;
-import org.eclipse.leshan.core.tlv.TlvException;
 import org.eclipse.leshan.core.tlv.Tlv.TlvType;
 import org.junit.Test;
 

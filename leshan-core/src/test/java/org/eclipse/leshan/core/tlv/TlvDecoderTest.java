@@ -15,16 +15,14 @@
  *******************************************************************************/
 package org.eclipse.leshan.core.tlv;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.eclipse.leshan.core.node.ObjectLink;
-import org.eclipse.leshan.core.tlv.Tlv;
-import org.eclipse.leshan.core.tlv.TlvDecoder;
-import org.eclipse.leshan.core.tlv.TlvEncoder;
-import org.eclipse.leshan.core.tlv.TlvException;
 import org.eclipse.leshan.core.util.Hex;
 import org.junit.Test;
 import org.slf4j.Logger;
