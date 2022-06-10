@@ -496,6 +496,23 @@ Contributors:
                 </executions>
             </plugin>
             <plugin>
+                <groupId>net.revelc.code</groupId>
+                <artifactId>impsort-maven-plugin</artifactId>
+                <version>1.6.2</version>
+                <configuration>
+                    <removeUnused>true</removeUnused>
+                    <staticGroups>*</staticGroups>
+                    <groups>java.,javax.,org.,com.</groups>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>
