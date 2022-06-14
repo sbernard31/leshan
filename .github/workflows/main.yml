@@ -1,0 +1,93 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Maven
+
+on:
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build: 
+    name : Code Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'adopt'
+        cache: maven
+
+    # prepare Github Checks (just to display result elegantly)
+    - name: Prepare Build Check
+      uses: LouisBrunner/checks-action@v1.2.0
+      id: build_check
+      with:
+       name: Build Code
+       token: ${{ secrets.GITHUB_TOKEN }}
+       status: queued
+
+    - name: Prepare Unit tests Check
+      uses: LouisBrunner/checks-action@v1.2.0
+      id: unitTests_check
+      with:
+       name: Unit Tests
+       token: ${{ secrets.GITHUB_TOKEN }}
+       status: queued
+    
+    # Build Code   
+    - name: Build Starting
+      uses: LouisBrunner/checks-action@v1.2.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        check_id: ${{ steps.build_check.outputs.check_id }}
+        status: in_progress
+
+    - name: Build
+      id: build
+      continue-on-error: true
+      run: mvn --batch-mode -DskipTests -Dskip.yarn package
+
+    - name: Build Conclusion
+      uses: LouisBrunner/checks-action@v1.2.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        check_id: ${{ steps.build_check.outputs.check_id }}
+        status: completed
+        conclusion: ${{ steps.build.outcome }}
+    
+    # Build Code   
+    - name: Unit Tests Starting
+      uses: LouisBrunner/checks-action@v1.2.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        check_id: ${{ steps.unitTests_check.outputs.check_id }}
+        status: in_progress
+
+    - name: Unit Tests
+      id: unitTests
+      continue-on-error: true
+      run: mvn test '-Dtest=!org.eclipse.leshan.integration.tests.**' -DfailIfNoTests=false -Dskip.yarn
+
+    - name: Unit Tests Conclusion
+      uses: LouisBrunner/checks-action@v1.2.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        check_id: ${{ steps.unitTests_check.outputs.check_id }}
+        status: completed
+        conclusion: ${{ steps.unitTests.outcome }}
+   
+    #- name: Integration Tests
+    #  run: mvn test '-Dtest=org.eclipse.leshan.integration.tests.**' -Dsurefire.rerunFailingTestsCount=3 -DfailIfNoTests=false -Dskip.yarn -Dmaven.test.failure.ignore=true
+
+    - name: Report
+      uses: mikepenz/action-junit-report@v3.0.3
+      if: always()
+      with:
+          check_name: Tests Report
+          report_paths: '**/target/surefire-reports/*.xml'
+          fail_on_failure: true
