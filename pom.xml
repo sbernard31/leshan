@@ -513,6 +513,39 @@ Contributors:
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.1.2</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>8.45.1</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <!--  we should use plugin dependency instead of maven.multiModuleProjectDirectory
+                          See : 
+                          https://maven.apache.org/plugins-archives/maven-checkstyle-plugin-2.4/examples/multi-module-config.html
+                          because : 
+                          this work only at root level and also https://stackoverflow.com/a/29780763/5088764
+                    -->
+                    <configLocation>${maven.multiModuleProjectDirectory}/eclipse/checkstyle.xml</configLocation>
+                    <encoding>UTF-8</encoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>
