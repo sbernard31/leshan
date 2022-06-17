@@ -136,6 +136,13 @@ Contributors:
     </profiles>
 
     <properties>
+        <!-- configure encoding -->
+        <leshan.encoding>UTF-8</leshan.encoding>
+        <project.build.sourceEncoding>${leshan.encoding}</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${leshan.encoding}</project.reporting.outputEncoding>
+        <!-- configure line separator -->
+        <leshan.lineseparator>\n</leshan.lineseparator>
+    
         <!-- we use properties for version when there are used more than once -->
         <!-- dependencies version -->
         <californium.version>3.5.0</californium.version>
@@ -221,6 +228,12 @@ Contributors:
                     <version>3.8.1</version>
                 </plugin>
                 <plugin>
+                    <groupId>com.github.ekryd.sortpom</groupId>
+                    <artifactId>sortpom-maven-plugin</artifactId>
+                    <!-- can not upgrade because of we stuck with java8 : https://github.com/Ekryd/sortpom/issues/225 --> 
+                    <version>3.0.1</version>
+                </plugin>
+                <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.0.0-M5</version>
                 </plugin>
@@ -295,6 +308,29 @@ Contributors:
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <!--  One of the rare plugin which must be called on all module even Aggregator
+                      because it must check formatting of all pom.xml file.
+                      Must be called with -PallPom profile -->
+                <groupId>com.github.ekryd.sortpom</groupId>
+                <artifactId>sortpom-maven-plugin</artifactId>
+                <configuration>
+                    <createBackupFile>false</createBackupFile>
+                    <lineSeparator>${leshan.lineseparator}</lineSeparator>
+                    <verifyFail>stop</verifyFail>
+                    <verifyFailOn>Strict</verifyFailOn>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencyManagement>
