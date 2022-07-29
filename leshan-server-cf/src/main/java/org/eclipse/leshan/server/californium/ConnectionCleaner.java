@@ -33,7 +33,7 @@ import org.eclipse.leshan.server.security.SecurityInfo;
  */
 public class ConnectionCleaner {
 
-    private DTLSConnector connector;
+    private connector;
 
     public ConnectionCleaner(DTLSConnector connector) {
         this.connector = connector;
