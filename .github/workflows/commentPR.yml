@@ -1,0 +1,25 @@
+name: Comment on the pull request
+
+# read-write repo token
+# access to secrets
+on:
+  workflow_run:
+    workflows: ["Receive PR"]
+    types:
+      - completed
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request'
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+         name: failures
+         path: failures
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: path/to/artifact

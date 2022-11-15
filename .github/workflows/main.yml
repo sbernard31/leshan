@@ -1,7 +1,9 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# This workflow will build a Java project with Maven, 
+# and cache/restore any dependencies to improve the workflow execution time
+# For more information 
+# see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Maven
+name: Receive PR
 
 on:
   pull_request:
@@ -39,6 +41,11 @@ jobs:
       if: always()
       id: sortpom
       uses: ./.github/actions/sortpom
+
+    - name: test
+      if: always()
+      id: test_comment
+      uses: ./.github/actions/test_comment
 
     - name: Code Format Check
       if: always()
@@ -82,6 +89,12 @@ jobs:
       id: integration_tests
       if: ${{ always() && steps.build.conclusion == 'success' }}
       uses: ./.github/actions/integration-tests
+
+    - uses: actions/upload-artifact@v3
+      with:
+       name: failures
+       path: failures
+
 
     - name: Add Tips comment
       if: failure()
