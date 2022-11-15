@@ -12,7 +12,7 @@ runs:
 
   - name: Add comment
     if: failure()
-    uses: marocchino/sticky-pull-request-comment@v2
+    uses: marocchino/sticky-pull-request-comment@adca94abcaf73c10466a71cc83ae561fd66d1a56
     with:
       header: Code Formatter Validation Failed
       message: |
@@ -34,7 +34,7 @@ runs:
 
   - name: Delete comment
     if: success()
-    uses: marocchino/sticky-pull-request-comment@v2
+    uses: marocchino/sticky-pull-request-comment@adca94abcaf73c10466a71cc83ae561fd66d1a56
     with:
       header: Code Formatter Validation Failed
       delete: true

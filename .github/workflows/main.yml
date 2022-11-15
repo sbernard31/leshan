@@ -85,7 +85,7 @@ jobs:
 
     - name: Add Tips comment
       if: failure()
-      uses: marocchino/sticky-pull-request-comment@v2
+      uses: marocchino/sticky-pull-request-comment@adca94abcaf73c10466a71cc83ae561fd66d1a56
       with:
         header: Refine your PR
         message: |
@@ -97,7 +97,7 @@ jobs:
       
     - name: Delete Tips comment
       if: success()
-      uses: marocchino/sticky-pull-request-comment@v2
+      uses: marocchino/sticky-pull-request-comment@adca94abcaf73c10466a71cc83ae561fd66d1a56
       with:
         header: Refine your PR
         delete: true
