@@ -83,14 +83,6 @@ jobs:
       if: ${{ always() && steps.build.conclusion == 'success' }}
       uses: ./.github/actions/integration-tests
 
-    - name: Report Test Failure
-      uses: mikepenz/action-junit-report@v3
-      if: ${{ always() && (steps.unit_tests.conclusion == 'failure' || steps.integration_tests.conclusion == 'failure') }}
-      with:
-          check_name: Automatic Tests Report
-          report_paths: '**/target/surefire-reports/*.xml'
-          fail_on_failure: true
-
     - name: Add Tips comment
       if: failure()
       uses: marocchino/sticky-pull-request-comment@v2
