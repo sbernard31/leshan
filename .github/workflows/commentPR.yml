@@ -15,7 +15,7 @@ jobs:
       github.event.workflow_run.event == 'pull_request'
 
     steps:
-      # Waitin https://github.com/actions/download-artifact/issues/172
+      # Waiting https://github.com/actions/download-artifact/issues/172
       # We are using github script
       # Inspired by : https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
       - name: 'Download artifact'
@@ -44,6 +44,9 @@ jobs:
         run: ls -R
         working-directory: ./
         
-      - name: Display structure of downloaded files
-        run: ls -R
-        working-directory: ./failures
+
+      - name: comment
+        uses: marocchino/sticky-pull-request-comment@adca94abcaf73c10466a71cc83ae561fd66d1a56
+        with:
+          header: Java Import check Failed
+          path: sort_pom
