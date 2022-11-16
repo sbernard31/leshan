@@ -8,18 +8,21 @@ on:
     types:
       - completed
 
+env:
+  artifacts_name: "artifacts"
+  info_filename: "info"
+
 jobs:
   upload:
     runs-on: ubuntu-latest
-    if: >
-      github.event.workflow_run.event == 'pull_request'
+    if: github.event.workflow_run.event == 'pull_request'
 
     steps:
       # Waiting https://github.com/actions/download-artifact/issues/172
       # We are using github script
       # Inspired by : https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
       - name: 'Download artifact'
-        uses: actions/github-script@v3.1.0
+        uses: actions/github-script@v6.3.3
         with:
           script: |
             var artifacts = await github.actions.listWorkflowRunArtifacts({
@@ -28,7 +31,7 @@ jobs:
                run_id: ${{github.event.workflow_run.id }},
             });
             var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "failures"
+              return artifact.name == ${{env.artifacts_name}}
             })[0];
             var download = await github.actions.downloadArtifact({
                owner: context.repo.owner,
@@ -37,16 +40,24 @@ jobs:
                archive_format: 'zip',
             });
             var fs = require('fs');
-            fs.writeFileSync('${{github.workspace}}/failures.zip', Buffer.from(download.data));
-      - run: unzip failures.zip
+            fs.writeFileSync('${{github.workspace}}/${{env.artifacts_name}}.zip', Buffer.from(download.data));
+      - run: unzip ${{env.artifacts_name}}.zip
 
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: ./
         
 
+      - name: Read value from Properties-file
+        id: read_property
+        uses: christian-draeger/read-properties@1.1.0
+        with:
+          path: ${{env.artifacts_name}}/${{env.info}}
+          properties: 'pull_request_id'
+
       - name: comment
         uses: marocchino/sticky-pull-request-comment@adca94abcaf73c10466a71cc83ae561fd66d1a56
         with:
+          number: ${{ steps.read_property.outputs.the-key-of-a-property }}
           header: Java Import check Failed
-          path: sort_pom
+          path:  ${{env.artifacts_name}}/sortpom
