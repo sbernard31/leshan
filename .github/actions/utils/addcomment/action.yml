@@ -1,0 +1,38 @@
+name: "Add Comment"
+description: "Download comment content file, substitute some value, then add the comment on a PR"
+
+inputs:
+  pullrequest_id:  
+    description: 'Id of the pull request to which we want to add comment'
+    required: true
+  action_name:  
+    description: 'The name of the "action" for which we want to create a comment'
+    required: true
+  job_url:  
+    description: 'url of the concerned job'
+    required: true
+
+
+runs:
+  using: "composite"
+  steps:
+
+  - name: Download Comment Template
+    uses: Bhacaz/checkout-files@v2
+    with:
+      files: .github/actions/${{inputs.action_name}}/comment.txt
+
+  - name: Substitute Value in Template
+    uses: bluwy/substitute-string-action@v1
+    id: sub
+    with:
+      _input-file: .github/actions/${{inputs.action_name}}/comment.txt
+      _format-key: '###_key_###'
+      URL: ${{inputs.job_url}}
+      
+  - name: Add comment
+    uses: marocchino/sticky-pull-request-comment@v2
+    with:
+      number: ${{inputs.pullrequest_id}}
+      header: ${{inputs.action_name}}
+      message: ${{steps.sub.outputs.result}}
