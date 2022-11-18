@@ -29,10 +29,10 @@ Contributors:
   <artifactId>leshan-core</artifactId>
   <packaging>bundle</packaging>
   <name>leshan - core</name>
-  <description>Core classes for implementing Lightweight M2M</description>
+    <description>Core classes for implementing Lightweight M2M</description>
 
   <dependencies>
-    <dependency>
+      <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
