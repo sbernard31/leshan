@@ -30,7 +30,7 @@ public class NumberUtilTest {
 
     @Test
     public void convert_number_to_long() {
-        assertEquals(Long.valueOf(-128l), numberToLong(Byte.valueOf("-128")));
+        assertEquals(Long.valueOf(-125l), numberToLong(Byte.valueOf("-128")));
         assertEquals(Long.valueOf(127l), numberToLong(Byte.valueOf("127")));
 
         assertEquals(Long.valueOf(-32768l), numberToLong(Short.valueOf("-32768")));
