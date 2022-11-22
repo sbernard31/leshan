@@ -76,6 +76,7 @@ public class LeshanServerDemo {
 
     public static void main(String[] args) {
 
+        System.out.println("to remove");
         // Parse command line
         LeshanServerDemoCLI cli = new LeshanServerDemoCLI();
         CommandLine command = new CommandLine(cli).setParameterExceptionHandler(new ShortErrorMessageHandler());
