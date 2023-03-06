@@ -10,6 +10,11 @@ runs:
   using: "composite"
   steps:
 
+  - name: display maven version
+    id: ver
+    shell: bash
+    run: mvn -version
+
   - name: Check Java Import
     id: main
     shell: bash
