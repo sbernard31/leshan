@@ -15,8 +15,9 @@
  *******************************************************************************/
 package org.eclipse.leshan.server.californium;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
@@ -36,10 +37,17 @@ import java.security.spec.KeySpec;
 import org.eclipse.californium.elements.config.Configuration;
 import org.eclipse.californium.scandium.config.DtlsConfig;
 import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
+import org.eclipse.leshan.core.endpoint.Protocol;
 import org.eclipse.leshan.core.util.Hex;
+import org.eclipse.leshan.server.LeshanServer;
+import org.eclipse.leshan.server.LeshanServerBuilder;
+import org.eclipse.leshan.server.californium.endpoint.CaliforniumServerEndpointsProvider;
+import org.eclipse.leshan.server.californium.endpoint.CaliforniumServerEndpointsProvider.Builder;
+import org.eclipse.leshan.server.californium.endpoint.coap.CoapServerProtocolProvider;
+import org.eclipse.leshan.server.californium.endpoint.coaps.CoapsServerProtocolProvider;
 import org.eclipse.leshan.server.security.InMemorySecurityStore;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class LeshanServerBuilderTest {
 
@@ -76,61 +84,74 @@ public class LeshanServerBuilderTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void start() {
         builder = new LeshanServerBuilder();
     }
 
     @Test
-    public void create_server_without_any_parameter() {
+    public void create_server_with_default_californiumEndpointsProvider() {
+        builder.setEndpointsProvider(new CaliforniumServerEndpointsProvider());
         server = builder.build();
 
-        assertNull(server.getSecuredAddress());
-        assertNotNull(server.getUnsecuredAddress());
+        assertEquals(1, server.getEndpoints().size());
+        assertEquals(Protocol.COAP, server.getEndpoints().get(0).getProtocol());
+    }
+
+    @Test
+    public void create_server_without_securityStore() {
+        Builder endpointsBuilder = new CaliforniumServerEndpointsProvider.Builder(new CoapServerProtocolProvider(),
+                new CoapsServerProtocolProvider());
+        builder.setEndpointsProvider(endpointsBuilder.build());
+        server = builder.build();
+
+        assertEquals(1, server.getEndpoints().size());
+        assertEquals(Protocol.COAP, server.getEndpoints().get(0).getProtocol());
         assertNull(server.getSecurityStore());
     }
 
     @Test
     public void create_server_with_securityStore() {
+        Builder endpointsBuilder = new CaliforniumServerEndpointsProvider.Builder(new CoapServerProtocolProvider(),
+                new CoapsServerProtocolProvider());
+        builder.setEndpointsProvider(endpointsBuilder.build());
         builder.setSecurityStore(new InMemorySecurityStore());
         server = builder.build();
 
-        assertNotNull(server.getSecuredAddress());
-        assertNotNull(server.getUnsecuredAddress());
+        assertEquals(2, server.getEndpoints().size());
+        assertEquals(Protocol.COAP, server.getEndpoints().get(0).getProtocol());
+        assertEquals(Protocol.COAPS, server.getEndpoints().get(1).getProtocol());
         assertNotNull(server.getSecurityStore());
     }
 
     @Test
-    public void create_server_with_securityStore_and_disable_secured_endpoint() {
+    public void create_server_with_coaps_only() {
+        Builder endpointsBuilder = new CaliforniumServerEndpointsProvider.Builder(new CoapsServerProtocolProvider());
+        builder.setEndpointsProvider(endpointsBuilder.build());
         builder.setSecurityStore(new InMemorySecurityStore());
-        builder.disableSecuredEndpoint();
         server = builder.build();
 
-        assertNull(server.getSecuredAddress());
-        assertNotNull(server.getUnsecuredAddress());
-    }
-
-    @Test
-    public void create_server_with_securityStore_and_disable_unsecured_endpoint() {
-        builder.setSecurityStore(new InMemorySecurityStore());
-        builder.disableUnsecuredEndpoint();
-        server = builder.build();
-
-        assertNotNull(server.getSecuredAddress());
-        assertNull(server.getUnsecuredAddress());
+        assertEquals(1, server.getEndpoints().size());
+        assertEquals(Protocol.COAPS, server.getEndpoints().get(0).getProtocol());
+        assertNotNull(server.getSecurityStore());
     }
 
     @Test
     public void create_server_without_psk_cipher() {
-        Configuration coapConfiguration = LeshanServerBuilder.createDefaultCoapConfiguration();
+        Builder endpointsBuilder = new CaliforniumServerEndpointsProvider.Builder(new CoapsServerProtocolProvider());
+
+        Configuration coapConfiguration = endpointsBuilder.createDefaultConfiguration();
         coapConfiguration.setAsList(DtlsConfig.DTLS_CIPHER_SUITES, CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8);
-        builder.setCoapConfig(coapConfiguration);
+        endpointsBuilder.setConfiguration(coapConfiguration);
+
         builder.setPrivateKey(privateKey);
         builder.setPublicKey(publicKey);
         builder.setSecurityStore(new InMemorySecurityStore());
+        builder.setEndpointsProvider(endpointsBuilder.build());
 
         server = builder.build();
 
-        assertNotNull(server.getSecuredAddress());
+        assertEquals(1, server.getEndpoints().size());
+        assertEquals(Protocol.COAPS, server.getEndpoints().get(0).getProtocol());
     }
 }

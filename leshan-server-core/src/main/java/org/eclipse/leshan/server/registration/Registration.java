@@ -19,6 +19,7 @@ package org.eclipse.leshan.server.registration;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,6 +33,7 @@ import java.util.TreeSet;
 
 import org.eclipse.leshan.core.LwM2m.LwM2mVersion;
 import org.eclipse.leshan.core.LwM2m.Version;
+import org.eclipse.leshan.core.endpoint.EndpointUriUtil;
 import org.eclipse.leshan.core.link.Link;
 import org.eclipse.leshan.core.link.attributes.Attributes;
 import org.eclipse.leshan.core.link.attributes.ContentFormatAttribute;
@@ -94,16 +96,15 @@ public class Registration {
 
     private final Map<String, String> applicationData;
 
-    protected Registration(Builder builder) {
+    private final URI lastEndpointUsed;
 
-        Validate.notNull(builder.registrationId);
-        Validate.notEmpty(builder.endpoint);
-        Validate.notNull(builder.identity);
+    protected Registration(Builder builder) {
 
         // mandatory params
         id = builder.registrationId;
         identity = builder.identity;
         endpoint = builder.endpoint;
+        lastEndpointUsed = builder.lastEndpointUsed;
 
         // object links related params
         objectLinks = builder.objectLinks;
@@ -346,6 +347,10 @@ public class Registration {
         return applicationData;
     }
 
+    public URI getLastEndpointUsed() {
+        return lastEndpointUsed;
+    }
+
     @Override
     public String toString() {
         return String.format(
@@ -475,6 +480,7 @@ public class Registration {
         private final String registrationId;
         private final String endpoint;
         private final Identity identity;
+        private final URI lastEndpointUsed;
 
         private Date registrationDate;
         private Date lastUpdate;
@@ -500,6 +506,7 @@ public class Registration {
             registrationId = registration.id;
             identity = registration.identity;
             endpoint = registration.endpoint;
+            lastEndpointUsed = registration.lastEndpointUsed;
 
             // object links related params
             objectLinks = registration.objectLinks;
@@ -521,14 +528,17 @@ public class Registration {
             applicationData = registration.applicationData;
         }
 
-        public Builder(String registrationId, String endpoint, Identity identity) {
+        public Builder(String registrationId, String endpoint, Identity identity, URI lastEndpointUsed) {
 
             Validate.notNull(registrationId);
             Validate.notEmpty(endpoint);
             Validate.notNull(identity);
+            EndpointUriUtil.validateURI(lastEndpointUsed);
+
             this.registrationId = registrationId;
             this.endpoint = endpoint;
             this.identity = identity;
+            this.lastEndpointUsed = lastEndpointUsed;
         }
 
         public Builder extractDataFromObjectLink(boolean extract) {

@@ -18,11 +18,11 @@ package org.eclipse.leshan.integration.tests.util;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -36,8 +36,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.californium.core.coap.Request;
 import org.eclipse.californium.core.network.CoapEndpoint;
 import org.eclipse.californium.elements.Connector;
-import org.eclipse.leshan.client.californium.LeshanClient;
-import org.eclipse.leshan.client.californium.LeshanClientBuilder;
+import org.eclipse.californium.scandium.DTLSConnector;
+import org.eclipse.leshan.client.LeshanClient;
+import org.eclipse.leshan.client.LeshanClientBuilder;
+import org.eclipse.leshan.client.californium.endpoint.CaliforniumClientEndpoint;
+import org.eclipse.leshan.client.californium.endpoint.CaliforniumClientEndpointsProvider;
 import org.eclipse.leshan.client.object.Device;
 import org.eclipse.leshan.client.object.LwM2mTestObject;
 import org.eclipse.leshan.client.object.Security;
@@ -48,6 +51,8 @@ import org.eclipse.leshan.client.resource.ObjectsInitializer;
 import org.eclipse.leshan.client.send.ManualDataSender;
 import org.eclipse.leshan.client.servers.ServerIdentity;
 import org.eclipse.leshan.core.LwM2mId;
+import org.eclipse.leshan.core.endpoint.EndpointUriUtil;
+import org.eclipse.leshan.core.endpoint.Protocol;
 import org.eclipse.leshan.core.link.DefaultLinkSerializer;
 import org.eclipse.leshan.core.link.LinkParser;
 import org.eclipse.leshan.core.link.LinkSerializer;
@@ -61,11 +66,18 @@ import org.eclipse.leshan.core.request.UplinkRequest;
 import org.eclipse.leshan.core.request.argument.Arguments;
 import org.eclipse.leshan.core.response.ExecuteResponse;
 import org.eclipse.leshan.core.util.TestLwM2mId;
-import org.eclipse.leshan.server.californium.LeshanServer;
-import org.eclipse.leshan.server.californium.LeshanServerBuilder;
+import org.eclipse.leshan.server.LeshanServer;
+import org.eclipse.leshan.server.LeshanServerBuilder;
+import org.eclipse.leshan.server.californium.endpoint.CaliforniumServerEndpoint;
+import org.eclipse.leshan.server.californium.endpoint.CaliforniumServerEndpointsProvider;
+import org.eclipse.leshan.server.californium.endpoint.CaliforniumServerEndpointsProvider.Builder;
+import org.eclipse.leshan.server.californium.endpoint.coap.CoapOscoreServerEndpointFactory;
+import org.eclipse.leshan.server.californium.endpoint.coap.CoapServerProtocolProvider;
+import org.eclipse.leshan.server.californium.endpoint.coaps.CoapsServerProtocolProvider;
 import org.eclipse.leshan.server.model.VersionedModelProvider;
 import org.eclipse.leshan.server.registration.Registration;
 import org.eclipse.leshan.server.registration.RegistrationServiceImpl;
+import org.eclipse.leshan.server.security.Authorization;
 import org.eclipse.leshan.server.security.DefaultAuthorizer;
 import org.eclipse.leshan.server.security.InMemorySecurityStore;
 import org.eclipse.leshan.server.security.SecurityStore;
@@ -87,13 +99,15 @@ public class IntegrationTestHelper {
     public LeshanClient client;
     public AtomicReference<String> currentEndpointIdentifier = new AtomicReference<String>();
 
-    private SynchronousClientObserver clientObserver = new SynchronousClientObserver();
-    private SynchronousRegistrationListener registrationListener = new SynchronousRegistrationListener() {
+    private final SynchronousClientObserver clientObserver = new SynchronousClientObserver();
+    private final SynchronousRegistrationListener registrationListener = new SynchronousRegistrationListener() {
         @Override
         public boolean accept(Registration registration) {
             return (registration != null && registration.getEndpoint().equals(currentEndpointIdentifier.get()));
         }
     };
+
+    private boolean useOscore = false;
 
     public List<ObjectModel> createObjectModels() {
         // load default object from the spec
@@ -145,9 +159,8 @@ public class IntegrationTestHelper {
     public void createClient(Map<String, String> additionalAttributes) {
         // Create objects Enabler
         ObjectsInitializer initializer = createObjectsInitializer();
-        initializer.setInstancesForObject(LwM2mId.SECURITY, Security.noSec(
-                "coap://" + server.getUnsecuredAddress().getHostString() + ":" + server.getUnsecuredAddress().getPort(),
-                12345));
+        initializer.setInstancesForObject(LwM2mId.SECURITY,
+                Security.noSec(server.getEndpoint(Protocol.COAP).getURI().toString(), 12345));
         initializer.setInstancesForObject(LwM2mId.SERVER, new Server(12345, LIFETIME));
         initializer.setInstancesForObject(LwM2mId.DEVICE, new TestDevice("Eclipse Leshan", MODEL_NUMBER, "12345"));
         initializer.setClassForObject(LwM2mId.ACCESS_CONTROL, DummyInstanceEnabler.class);
@@ -161,6 +174,7 @@ public class IntegrationTestHelper {
         builder.setDataSenders(new ManualDataSender());
         builder.setAdditionalAttributes(additionalAttributes);
         builder.setObjects(objects);
+        builder.setEndpointsProvider(new CaliforniumClientEndpointsProvider());
         client = builder.build();
         setupClientMonitoring();
     }
@@ -172,9 +186,23 @@ public class IntegrationTestHelper {
     }
 
     public void createOscoreServer() {
-        server = createServerBuilder().setEnableOscore(true).build();
+        // TODO support OSCORE
+        useOscore = true;
+        server = createServerBuilder().build();
         // monitor client registration
         setupServerMonitoring();
+    }
+
+    protected Builder createEndpointsProviderBuilder() {
+        Builder endpointsBuilder = new CaliforniumServerEndpointsProvider.Builder(new CoapServerProtocolProvider(),
+                new CoapsServerProtocolProvider());
+        if (useOscore) {
+            endpointsBuilder.addEndpoint(new CoapOscoreServerEndpointFactory(
+                    EndpointUriUtil.createUri("coap", new InetSocketAddress(InetAddress.getLoopbackAddress(), 0))));
+        } else {
+            endpointsBuilder.addEndpoint(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), Protocol.COAP);
+        }
+        return endpointsBuilder;
     }
 
     protected LeshanServerBuilder createServerBuilder() {
@@ -182,13 +210,13 @@ public class IntegrationTestHelper {
         builder.setDecoder(new DefaultLwM2mDecoder(true));
         builder.setEncoder(new DefaultLwM2mEncoder(true));
         builder.setObjectModelProvider(new VersionedModelProvider(createObjectModels()));
-        builder.setLocalAddress(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0));
-        builder.setLocalSecureAddress(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0));
+
+        builder.setEndpointsProvider(createEndpointsProviderBuilder().build());
         SecurityStore securityStore = createSecurityStore();
         builder.setSecurityStore(securityStore);
         builder.setAuthorizer(new DefaultAuthorizer(securityStore) {
             @Override
-            public Registration isAuthorized(UplinkRequest<?> request, Registration registration,
+            public Authorization isAuthorized(UplinkRequest<?> request, Registration registration,
                     Identity senderIdentity) {
                 assertThat(request.getCoapRequest(), instanceOf(Request.class));
                 return super.isAuthorized(request, registration, senderIdentity);
@@ -344,7 +372,12 @@ public class IntegrationTestHelper {
     }
 
     public Connector getClientConnector(ServerIdentity server) {
-        CoapEndpoint endpoint = (CoapEndpoint) client.coap().getServer().getEndpoint(client.getAddress(server));
-        return endpoint.getConnector();
+        CaliforniumClientEndpoint endpoint = (CaliforniumClientEndpoint) client.getEndpoint(server);
+        return ((CoapEndpoint) endpoint.getCoapEndpoint()).getConnector();
+    }
+
+    public DTLSConnector getServerDTLSConnector() {
+        CaliforniumServerEndpoint endpoint = (CaliforniumServerEndpoint) server.getEndpoint(Protocol.COAPS);
+        return (DTLSConnector) endpoint.getCoapEndpoint().getConnector();
     }
 }

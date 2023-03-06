@@ -17,7 +17,9 @@ package org.eclipse.leshan.senml.json.jackson;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.eclipse.leshan.core.util.Base64;
+import org.eclipse.leshan.core.util.base64.Base64Decoder;
+import org.eclipse.leshan.core.util.base64.Base64Encoder;
+import org.eclipse.leshan.core.util.base64.InvalidBase64Exception;
 import org.eclipse.leshan.core.util.datatype.ULong;
 import org.eclipse.leshan.core.util.json.JacksonJsonSerDes;
 import org.eclipse.leshan.core.util.json.JsonException;
@@ -29,11 +31,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SenMLJsonRecordSerDes extends JacksonJsonSerDes<SenMLRecord> {
-    private final boolean allowNoValue;
 
-    public SenMLJsonRecordSerDes() {
-        this(false);
-    }
+    private final boolean allowNoValue;
+    private final Base64Decoder base64Decoder;
+    private final Base64Encoder base64Encoder;
 
     /**
      * Create SenML-JSON serializer/deserializer based on Jackson.
@@ -44,8 +45,10 @@ public class SenMLJsonRecordSerDes extends JacksonJsonSerDes<SenMLRecord> {
      *
      * @param allowNoValue <code>True</code> to not check if there is a value for each SenML record.
      */
-    public SenMLJsonRecordSerDes(boolean allowNoValue) {
+    public SenMLJsonRecordSerDes(boolean allowNoValue, Base64Decoder base64Decoder, Base64Encoder base64Encoder) {
         this.allowNoValue = allowNoValue;
+        this.base64Decoder = base64Decoder;
+        this.base64Encoder = base64Encoder;
     }
 
     @Override
@@ -105,7 +108,7 @@ public class SenMLJsonRecordSerDes extends JacksonJsonSerDes<SenMLRecord> {
                 jsonObj.put("vlo", record.getObjectLinkValue());
                 break;
             case OPAQUE:
-                jsonObj.put("vd", Base64.encodeBase64String(record.getOpaqueValue()));
+                jsonObj.put("vd", base64Encoder.encode(record.getOpaqueValue()));
                 break;
             case STRING:
                 jsonObj.put("vs", record.getStringValue());
@@ -171,7 +174,12 @@ public class SenMLJsonRecordSerDes extends JacksonJsonSerDes<SenMLRecord> {
 
         JsonNode vd = o.get("vd");
         if (vd != null && vd.isTextual()) {
-            record.setOpaqueValue(Base64.decodeBase64(vd.asText()));
+            try {
+                record.setOpaqueValue(base64Decoder.decode(vd.asText()));
+            } catch (InvalidBase64Exception exception) {
+                throw new JsonException(exception, "Node vd with value '%s' is not in valid Base64 format.",
+                        vd.asText());
+            }
             hasValue = true;
         }
 

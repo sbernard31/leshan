@@ -16,13 +16,14 @@
  *******************************************************************************/
 package org.eclipse.leshan.server.redis.serialization;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.Inet4Address;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.leshan.core.endpoint.EndpointUriUtil;
 import org.eclipse.leshan.core.link.Link;
 import org.eclipse.leshan.core.link.attributes.AttributeSet;
 import org.eclipse.leshan.core.link.attributes.ContentFormatAttribute;
@@ -33,11 +34,11 @@ import org.eclipse.leshan.core.link.attributes.ValuelessAttribute;
 import org.eclipse.leshan.core.request.ContentFormat;
 import org.eclipse.leshan.core.request.Identity;
 import org.eclipse.leshan.server.registration.Registration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RegistrationSerDesTest {
 
-    private RegistrationSerDes registrationSerDes = new RegistrationSerDes();
+    private final RegistrationSerDes registrationSerDes = new RegistrationSerDes();
 
     @Test
     public void ser_and_des_are_equals() {
@@ -52,9 +53,9 @@ public class RegistrationSerDesTest {
         objs[1] = new Link("/0/2");
 
         Registration.Builder builder = new Registration.Builder("registrationId", "endpoint",
-                Identity.unsecure(Inet4Address.getLoopbackAddress(), 1)).objectLinks(objs).rootPath("/")
+                Identity.unsecure(Inet4Address.getLoopbackAddress(), 1),
+                EndpointUriUtil.createUri("coap://localhost:5683")).objectLinks(objs).rootPath("/")
                         .supportedContentFormats(ContentFormat.TLV, ContentFormat.TEXT);
-
         builder.registrationDate(new Date(100L));
         builder.extractDataFromObjectLink(true);
         builder.lastUpdate(new Date(101L));
@@ -83,7 +84,8 @@ public class RegistrationSerDesTest {
         appData.put("null", null);
 
         Registration.Builder builder = new Registration.Builder("registrationId", "endpoint",
-                Identity.unsecure(Inet4Address.getLoopbackAddress(), 1)).objectLinks(objs).rootPath("/")
+                Identity.unsecure(Inet4Address.getLoopbackAddress(), 1),
+                EndpointUriUtil.createUri("coap://localhost:5683")).objectLinks(objs).rootPath("/")
                         .supportedContentFormats(ContentFormat.TLV, ContentFormat.TEXT).applicationData(appData);
 
         builder.registrationDate(new Date(100L));

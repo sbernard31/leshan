@@ -23,16 +23,17 @@ import static org.eclipse.leshan.integration.tests.util.IntegrationTestHelper.li
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +50,7 @@ import org.eclipse.californium.elements.config.Configuration;
 import org.eclipse.californium.elements.config.SystemConfig;
 import org.eclipse.californium.elements.config.UdpConfig;
 import org.eclipse.leshan.core.ResponseCode;
+import org.eclipse.leshan.core.endpoint.Protocol;
 import org.eclipse.leshan.core.link.LinkParseException;
 import org.eclipse.leshan.core.node.LwM2mPath;
 import org.eclipse.leshan.core.observation.Observation;
@@ -63,15 +65,15 @@ import org.eclipse.leshan.integration.tests.util.Callback;
 import org.eclipse.leshan.integration.tests.util.IntegrationTestHelper;
 import org.eclipse.leshan.server.registration.Registration;
 import org.eclipse.leshan.server.security.NonUniqueSecurityInfoException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RegistrationTest {
 
     protected IntegrationTestHelper helper = new IntegrationTestHelper();
 
-    @Before
+    @BeforeEach
     public void start() {
         helper.initialize();
         helper.createServer();
@@ -79,7 +81,7 @@ public class RegistrationTest {
         helper.createClient();
     }
 
-    @After
+    @AfterEach
     public void stop() throws InterruptedException {
         helper.client.destroy(true);
         helper.server.destroy();
@@ -148,10 +150,10 @@ public class RegistrationTest {
         int index = 0;
         for (Callback<ReadResponse> callback : callbacks) {
             boolean timedout = !callback.waitForResponse(1000);
-            assertFalse("Response or Error expected, no timeout, call " + index, timedout);
-            assertTrue("Response or Error expected, call " + index, callback.isCalled().get());
-            assertNull("No response expected, call " + index, callback.getResponse());
-            assertNotNull("Exception expected, call " + index, callback.getException());
+            assertFalse(timedout, "Response or Error expected, no timeout, call " + index);
+            assertTrue(callback.isCalled().get(), "Response or Error expected, call " + index);
+            assertNull(callback.getResponse(), "No response expected, call " + index);
+            assertNotNull(callback.getException(), "Exception expected, call " + index);
             ++index;
         }
     }
@@ -252,7 +254,7 @@ public class RegistrationTest {
         } catch (SendFailedException e) {
             return;
         }
-        fail("Observe request should be sent");
+        fail("Observe request should NOT be sent");
     }
 
     @Test
@@ -287,7 +289,9 @@ public class RegistrationTest {
 
         // create a register request without the list of supported object
         Request coapRequest = new Request(Code.POST);
-        coapRequest.setDestinationContext(new AddressEndpointContext(helper.server.getUnsecuredAddress()));
+        URI destinationURI = helper.server.getEndpoint(Protocol.COAP).getURI();
+        coapRequest
+                .setDestinationContext(new AddressEndpointContext(destinationURI.getHost(), destinationURI.getPort()));
         coapRequest.getOptions().setContentFormat(ContentFormat.LINK.getCode());
         coapRequest.getOptions().addUriPath("rd");
         coapRequest.getOptions().addUriQuery("ep=" + helper.currentEndpointIdentifier);

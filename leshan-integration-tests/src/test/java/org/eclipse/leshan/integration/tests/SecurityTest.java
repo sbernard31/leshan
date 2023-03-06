@@ -23,15 +23,16 @@ import static org.eclipse.leshan.integration.tests.util.SecureIntegrationTestHel
 import static org.eclipse.leshan.integration.tests.util.SecureIntegrationTestHelper.GOOD_PSK_ID;
 import static org.eclipse.leshan.integration.tests.util.SecureIntegrationTestHelper.GOOD_PSK_KEY;
 import static org.eclipse.leshan.integration.tests.util.SecureIntegrationTestHelper.getServerOscoreSetting;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
+import java.net.URI;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
@@ -43,18 +44,16 @@ import java.util.List;
 import org.eclipse.californium.core.coap.CoAP.Type;
 import org.eclipse.californium.core.coap.Request;
 import org.eclipse.californium.core.coap.Token;
-import org.eclipse.californium.core.network.CoapEndpoint;
-import org.eclipse.californium.core.network.Endpoint;
 import org.eclipse.californium.core.network.serialization.UdpDataSerializer;
 import org.eclipse.californium.elements.AddressEndpointContext;
 import org.eclipse.californium.elements.EndpointContext;
 import org.eclipse.californium.elements.RawData;
 import org.eclipse.californium.elements.auth.PreSharedKeyIdentity;
 import org.eclipse.californium.elements.exception.EndpointMismatchException;
-import org.eclipse.californium.elements.util.SimpleMessageCallback;
 import org.eclipse.californium.scandium.DTLSConnector;
 import org.eclipse.californium.scandium.dtls.DTLSSession;
 import org.eclipse.leshan.core.CertificateUsage;
+import org.eclipse.leshan.core.endpoint.Protocol;
 import org.eclipse.leshan.core.request.ReadRequest;
 import org.eclipse.leshan.core.request.exception.SendFailedException;
 import org.eclipse.leshan.core.request.exception.TimeoutException;
@@ -62,24 +61,25 @@ import org.eclipse.leshan.core.request.exception.UnconnectedPeerException;
 import org.eclipse.leshan.core.response.ReadResponse;
 import org.eclipse.leshan.integration.tests.util.Callback;
 import org.eclipse.leshan.integration.tests.util.SecureIntegrationTestHelper;
+import org.eclipse.leshan.integration.tests.util.cf.SimpleMessageCallback;
 import org.eclipse.leshan.server.registration.Registration;
 import org.eclipse.leshan.server.security.EditableSecurityStore;
 import org.eclipse.leshan.server.security.NonUniqueSecurityInfoException;
 import org.eclipse.leshan.server.security.SecurityInfo;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SecurityTest {
 
     protected SecureIntegrationTestHelper helper = new SecureIntegrationTestHelper();
 
-    @Before
+    @BeforeEach
     public void start() {
         helper.initialize();
     }
 
-    @After
+    @AfterEach
     public void stop() {
         if (helper.client != null)
             helper.client.destroy(true);
@@ -244,15 +244,11 @@ public class SecurityTest {
 
         // Create new session with new credentials at client side.
         // Get connector
-        Endpoint endpoint = helper.client.coap().getServer()
-                .getEndpoint(helper.client.getAddress(helper.getCurrentRegisteredServer()));
-        DTLSConnector connector = (DTLSConnector) ((CoapEndpoint) endpoint).getConnector();
+        DTLSConnector connector = (DTLSConnector) helper.getClientConnector(helper.getCurrentRegisteredServer());
         // Clear DTLS session to force new handshake
         connector.clearConnectionState();
         // Change PSK id
         helper.setNewPsk("anotherPSK", GOOD_PSK_KEY);
-        // restart connector
-        connector.start();
         // send and empty message to force a new handshake with new credentials
         SimpleMessageCallback callback = new SimpleMessageCallback();
         // create a ping message
@@ -261,8 +257,9 @@ public class SecurityTest {
         request.setMID(0);
         byte[] ping = new UdpDataSerializer().getByteArray(request);
         // sent it
-        connector.send(
-                RawData.outbound(ping, new AddressEndpointContext(helper.server.getSecuredAddress()), callback, false));
+        URI destinationUri = helper.server.getEndpoint(Protocol.COAPS).getURI();
+        connector.send(RawData.outbound(ping,
+                new AddressEndpointContext(destinationUri.getHost(), destinationUri.getPort()), callback, false));
         // Wait until new handshake DTLS is done
         EndpointContext endpointContext = callback.getEndpointContext(1000);
         assertEquals(((PreSharedKeyIdentity) endpointContext.getPeerIdentity()).getIdentity(), "anotherPSK");
@@ -272,8 +269,8 @@ public class SecurityTest {
             helper.server.send(helper.getCurrentRegistration(), new ReadRequest(3, 0, 1), 1000);
             fail("send must failed");
         } catch (SendFailedException e) {
-            assertTrue("must be caused by an EndpointMismatchException",
-                    e.getCause() instanceof EndpointMismatchException);
+            assertTrue(e.getCause() instanceof EndpointMismatchException,
+                    "must be caused by an EndpointMismatchException");
         } finally {
             connector.stop();
             helper.client.destroy(false);
@@ -379,15 +376,15 @@ public class SecurityTest {
         helper.assertClientRegisterered();
 
         // Remove DTLS connection at server side.
-        ((DTLSConnector) helper.server.coap().getSecuredEndpoint().getConnector()).clearConnectionState();
+        DTLSConnector dtlsServerConnector = helper.getServerDTLSConnector();
+        dtlsServerConnector.clearConnectionState();
 
         // try to send request
         ReadResponse readResponse = helper.server.send(registration, new ReadRequest(3), 1000);
         assertTrue(readResponse.isSuccess());
 
         // ensure we have a new session for it
-        DTLSSession session = ((DTLSConnector) helper.server.coap().getSecuredEndpoint().getConnector())
-                .getSessionByAddress(registration.getSocketAddress());
+        DTLSSession session = dtlsServerConnector.getSessionByAddress(registration.getSocketAddress());
         assertNotNull(session);
     }
 
@@ -412,7 +409,7 @@ public class SecurityTest {
         helper.assertClientRegisterered();
 
         // Remove DTLS connection at server side.
-        ((DTLSConnector) helper.server.coap().getSecuredEndpoint().getConnector()).clearConnectionState();
+        helper.getServerDTLSConnector().clearConnectionState();
 
         // stop client
         helper.client.stop(false);
@@ -453,7 +450,7 @@ public class SecurityTest {
         helper.assertClientRegisterered();
 
         // Remove DTLS connection at server side.
-        ((DTLSConnector) helper.server.coap().getSecuredEndpoint().getConnector()).clearConnectionState();
+        helper.getServerDTLSConnector().clearConnectionState();
 
         // try to send request
         try {
@@ -461,7 +458,7 @@ public class SecurityTest {
             fail("Read request SHOULD have failed");
         } catch (UnconnectedPeerException e) {
             // expected result
-            assertFalse("client is still awake", helper.server.getPresenceService().isClientAwake(registration));
+            assertFalse(helper.server.getPresenceService().isClientAwake(registration), "client is still awake");
         }
     }
 
@@ -1817,7 +1814,6 @@ public class SecurityTest {
 
         boolean useServerCertifcatePublicKey = true;
         helper.createRPKClient(useServerCertifcatePublicKey);
-        helper.client.start();
 
         helper.getSecurityStore()
                 .add(SecurityInfo.newRawPublicKeyInfo(helper.getCurrentEndpoint(), helper.clientPublicKey));

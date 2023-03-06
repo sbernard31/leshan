@@ -15,19 +15,21 @@
  *******************************************************************************/
 package org.eclipse.leshan.core.senml.cbor;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
 
+import org.eclipse.leshan.core.util.Hex;
 import org.eclipse.leshan.senml.SenMLPack;
 import org.eclipse.leshan.senml.SenMLRecord;
-import org.junit.Assert;
 
 public class SenMLTestUtil {
 
     public static void assertSenMLPackEquals(SenMLPack expected, SenMLPack actual) {
         if (expected.getRecords().size() != actual.getRecords().size()) {
-            Assert.fail("Pack not equals : number of records differ");
+            fail("Pack not equals : number of records differ");
         }
 
         for (int i = 0; i < expected.getRecords().size(); i++) {
@@ -49,15 +51,20 @@ public class SenMLTestUtil {
         assertFieldEquals("string value", expected.getStringValue(), actual.getStringValue());
 
         if (!equals(expected.getNumberValue(), actual.getNumberValue())) {
-            Assert.fail(String.format("Records not equals :number value differ expected %s, actual %s",
+            fail(String.format("Records not equals :number value differ expected %s, actual %s",
                     expected.getNumberValue(), actual.getNumberValue()));
         }
     }
 
     private static void assertFieldEquals(String fieldName, Object expected, Object actual) {
         if (!Objects.deepEquals(expected, actual)) {
-            Assert.fail(String.format("Records not equals : %s differ expected %s, actual %s", fieldName, expected,
-                    actual));
+            if (expected instanceof byte[]) {
+                expected = Hex.encodeHexString((byte[]) expected);
+            }
+            if (actual instanceof byte[]) {
+                actual = Hex.encodeHexString((byte[]) actual);
+            }
+            fail(String.format("Records not equals : %s differ expected %s, actual %s", fieldName, expected, actual));
         }
     }
 

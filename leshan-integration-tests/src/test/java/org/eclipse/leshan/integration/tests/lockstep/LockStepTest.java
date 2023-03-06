@@ -17,7 +17,10 @@
 package org.eclipse.leshan.integration.tests.lockstep;
 
 import static org.eclipse.leshan.integration.tests.util.IntegrationTestHelper.linkParser;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.EnumSet;
 import java.util.concurrent.Callable;
@@ -31,6 +34,7 @@ import org.eclipse.californium.core.coap.Request;
 import org.eclipse.californium.core.coap.Token;
 import org.eclipse.californium.core.config.CoapConfig;
 import org.eclipse.californium.elements.config.Configuration;
+import org.eclipse.leshan.core.endpoint.Protocol;
 import org.eclipse.leshan.core.request.BindingMode;
 import org.eclipse.leshan.core.request.ReadRequest;
 import org.eclipse.leshan.core.request.RegisterRequest;
@@ -39,18 +43,19 @@ import org.eclipse.leshan.core.request.exception.TimeoutException;
 import org.eclipse.leshan.core.response.ReadResponse;
 import org.eclipse.leshan.integration.tests.util.Callback;
 import org.eclipse.leshan.integration.tests.util.IntegrationTestHelper;
-import org.eclipse.leshan.server.californium.LeshanServerBuilder;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.eclipse.leshan.server.californium.endpoint.CaliforniumServerEndpointsProvider.Builder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class LockStepTest {
 
     public IntegrationTestHelper helper = new IntegrationTestHelper() {
+
         @Override
-        protected LeshanServerBuilder createServerBuilder() {
-            Configuration coapConfig = LeshanServerBuilder.createDefaultCoapConfiguration();
+        protected Builder createEndpointsProviderBuilder() {
+            Builder builder = super.createEndpointsProviderBuilder();
+            Configuration coapConfig = builder.createDefaultConfiguration();
 
             // configure retransmission, with this configuration a request without ACK should timeout in ~200*5ms
             coapConfig.set(CoapConfig.ACK_TIMEOUT, 200, TimeUnit.MILLISECONDS) //
@@ -58,21 +63,19 @@ public class LockStepTest {
                     .set(CoapConfig.ACK_TIMEOUT_SCALE, 1f) //
                     .set(CoapConfig.MAX_RETRANSMIT, 4);
 
-            LeshanServerBuilder builder = super.createServerBuilder();
-            builder.setCoapConfig(coapConfig);
-
+            builder.setConfiguration(coapConfig);
             return builder;
-        };
+        }
     };
 
-    @Before
+    @BeforeEach
     public void start() {
         helper.initialize();
         helper.createServer();
         helper.server.start();
     }
 
-    @After
+    @AfterEach
     public void stop() {
         helper.server.destroy();
         helper.dispose();
@@ -81,7 +84,7 @@ public class LockStepTest {
     @Test
     public void register_with_uq_binding_in_lw_1_0() throws Exception {
         // Register client
-        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getUnsecuredAddress());
+        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getEndpoint(Protocol.COAP).getURI());
         Token token = client.sendLwM2mRequest(
                 new RegisterRequest(helper.getCurrentEndpoint(), 60l, "1.0", EnumSet.of(BindingMode.U, BindingMode.Q),
                         null, null, linkParser.parseCoreLinkFormat("</1>,</2>,</3>".getBytes()), null));
@@ -92,7 +95,7 @@ public class LockStepTest {
     @Test
     public void register_with_ut_binding_in_lw_1_1() throws Exception {
         // Register client
-        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getUnsecuredAddress());
+        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getEndpoint(Protocol.COAP).getURI());
         Token token = client.sendLwM2mRequest(
                 new RegisterRequest(helper.getCurrentEndpoint(), 60l, "1.1", EnumSet.of(BindingMode.U, BindingMode.T),
                         null, null, linkParser.parseCoreLinkFormat("</1>,</2>,</3>".getBytes()), null));
@@ -102,7 +105,7 @@ public class LockStepTest {
 
     @Test
     public void register_update_with_invalid_binding_for_lw_1_1() throws Exception {
-        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getUnsecuredAddress());
+        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getEndpoint(Protocol.COAP).getURI());
 
         // register with valid binding for 1.1
         RegisterRequest validRegisterRequest = new RegisterRequest(helper.getCurrentEndpoint(), 60l, "1.1",
@@ -135,7 +138,7 @@ public class LockStepTest {
 
     @Test
     public void register_update_with_invalid_binding_for_lw_1_0() throws Exception {
-        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getUnsecuredAddress());
+        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getEndpoint(Protocol.COAP).getURI());
 
         // register with valid binding for 1.0
         RegisterRequest validRegisterRequest = new RegisterRequest(helper.getCurrentEndpoint(), 60l, "1.0",
@@ -169,7 +172,7 @@ public class LockStepTest {
     @Test
     public void sync_send_without_acknowleged() throws Exception {
         // Register client
-        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getUnsecuredAddress());
+        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getEndpoint(Protocol.COAP).getURI());
         Token token = client.sendLwM2mRequest(
                 new RegisterRequest(helper.getCurrentEndpoint(), 60l, "1.1", EnumSet.of(BindingMode.U), null, null,
                         linkParser.parseCoreLinkFormat("</1>,</2>,</3>".getBytes()), null));
@@ -186,13 +189,13 @@ public class LockStepTest {
         });
         // Request should timedout in ~1s we don't send ACK
         ReadResponse response = future.get(1500, TimeUnit.MILLISECONDS);
-        Assert.assertNull("we should timeout", response);
+        assertNull(response, "we should timeout");
     }
 
     @Test
     public void sync_send_with_acknowleged_request_without_response() throws Exception {
         // Register client
-        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getUnsecuredAddress());
+        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getEndpoint(Protocol.COAP).getURI());
         Token token = client.sendLwM2mRequest(
                 new RegisterRequest(helper.getCurrentEndpoint(), 60l, "1.1", EnumSet.of(BindingMode.U), null, null,
                         linkParser.parseCoreLinkFormat("</1>,</2>,</3>".getBytes()), null));
@@ -214,15 +217,15 @@ public class LockStepTest {
 
         // Request should timedout in ~3s as we send the ACK
         Thread.sleep(1500);
-        Assert.assertFalse("we should still wait for response", future.isDone());
+        assertFalse(future.isDone(), "we should still wait for response");
         ReadResponse response = future.get(2000, TimeUnit.MILLISECONDS);
-        Assert.assertNull("we should timeout", response);
+        assertNull(response, "we should timeout");
     }
 
     @Test
     public void async_send_without_acknowleged() throws Exception {
         // register client
-        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getUnsecuredAddress());
+        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getEndpoint(Protocol.COAP).getURI());
         Token token = client.sendLwM2mRequest(
                 new RegisterRequest(helper.getCurrentEndpoint(), 60l, "1.1", EnumSet.of(BindingMode.U), null, null,
                         linkParser.parseCoreLinkFormat("</1>,</2>,</3>".getBytes()), null));
@@ -235,14 +238,14 @@ public class LockStepTest {
 
         // Request should timedout in ~1s we don't send ACK
         callback.waitForResponse(1500);
-        Assert.assertTrue("we should timeout", callback.getException() instanceof TimeoutException);
+        assertTrue(callback.getException() instanceof TimeoutException, "we should timeout");
         assertEquals(TimeoutException.Type.COAP_TIMEOUT, ((TimeoutException) callback.getException()).getType());
     }
 
     @Test
     public void async_send_with_acknowleged_request_without_response() throws Exception {
         // register client
-        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getUnsecuredAddress());
+        LockStepLwM2mClient client = new LockStepLwM2mClient(helper.server.getEndpoint(Protocol.COAP).getURI());
         Token token = client.sendLwM2mRequest(
                 new RegisterRequest(helper.getCurrentEndpoint(), 60l, "1.1", EnumSet.of(BindingMode.U), null, null,
                         linkParser.parseCoreLinkFormat("</1>,</2>,</3>".getBytes()), null));
@@ -259,9 +262,9 @@ public class LockStepTest {
 
         // Request should timedout in ~3s as we send a ack
         Thread.sleep(1500);
-        Assert.assertTrue("we should still wait for response", callback.getException() == null);
+        assertTrue(callback.getException() == null, "we should still wait for response");
         callback.waitForResponse(2000);
-        Assert.assertTrue("we should timeout", callback.getException() instanceof TimeoutException);
+        assertTrue(callback.getException() instanceof TimeoutException, "we should timeout");
         assertEquals(TimeoutException.Type.RESPONSE_TIMEOUT, ((TimeoutException) callback.getException()).getType());
     }
 }

@@ -49,8 +49,9 @@ public abstract class AsyncRequestObserver<T extends LwM2mResponse> extends Coap
      * @param executor used to scheduled timeout tasks.
      */
     public AsyncRequestObserver(Request coapRequest, final ResponseCallback<T> responseCallback,
-            final ErrorCallback errorCallback, long timeoutInMs, ScheduledExecutorService executor) {
-        super(coapRequest, null, errorCallback, timeoutInMs, executor);
+            final ErrorCallback errorCallback, long timeoutInMs, ScheduledExecutorService executor,
+            ExceptionTranslator exceptionTranslator) {
+        super(coapRequest, null, errorCallback, timeoutInMs, executor, exceptionTranslator);
         this.responseCallback = new CoapResponseCallback() {
 
             @Override
