@@ -1,0 +1,95 @@
+= Hello, AsciiDoc!
+Doc Writer <doc@example.com>
+
+An introduction to http://asciidoc.org[AsciiDoc].
+
+== First Section
+
+* item 1
+* item 2
+
+[source,ruby]
+puts "Hello, World!"
+
+
+_italic phrase_
+
+__i__talic le__tt__ers
+
+*bold phrase*
+
+**b**old le**tt**ers
+
+*_bold italic phrase_*
+
+**__b__**old italic le**__tt__**ers
+
+`monospace phrase` and le``tt``ers
+
+`_monospace italic phrase_` and le``__tt__``ers
+
+`*monospace bold phrase*` and le``**tt**``ers
+
+`*_monospace bold italic phrase_*` and le``**__tt__**``ers
+
+
+- [*] checked
+- [x] also checked
+- [ ] not checked
+-     normal list item
+
+[cols="2*", options="header"] 
+|===
+|Name of Column 1
+|Name of Column 2
+
+|Cell in column 1, row 1
+|Cell in column 2, row 1
+
+|Cell in column 1, row 2
+|Cell in column 2, row 2
+|===
+
+* level 1
+** level 2
+*** level 3
+**** level 4
+***** level 5
+* level 1
+
+[big]##O##nce upon an infinite loop.
+
+[cols="1,1,2", options="header"] 
+.Applications
+|===
+|Name
+|Category
+|Description
+
+|Firefox
+|Browser
+|Mozilla Firefox is an open-source web browser.
+It's designed for standards compliance,
+performance, portability.
+
+|Arquillian
+|Testing
+|An innovative and highly extensible testing platform.
+Empowers developers to easily create real, automated tests.
+|===
+
+|===
+|Shortcut |Purpose
+
+|kbd:[F11]
+|Toggle fullscreen
+
+|kbd:[Ctrl+T]
+|Open a new tab
+
+|kbd:[Ctrl+Shift+N]
+|New incognito window
+
+|kbd:[Ctrl + +]
+|Increase zoom
+|===
