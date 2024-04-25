@@ -30,21 +30,12 @@ jobs:
         jobstep: [nomerge,sortpom,buildstatus]
 
     steps:
-      - name: Display context
-        run: echo "$GITHUB_CONTEXT"
-    
       - name: Download Build Status Archive
         uses: actions/download-artifact@v4
         with:
           name: ${{env.build_status_filename}}
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
-              
-      - name: Display structure of downloaded files
-        run: ls -R      
-            
-      - name: Unzip Build Status Archive
-        run: unzip ${{env.build_status_filename}}.zip
 
       - name: Read Build Status Properties File
         id: read_property
