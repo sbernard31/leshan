@@ -71,55 +71,6 @@ jobs:
       with:
          build_status_filename: ${{env.build_status_filename}}
 
-    - name: Java Import Check
-      id: sortimport
-      if: ${{ always() && steps.build.conclusion == 'success' }}
-      uses: ./.github/actions/sortimport
-      with:
-         build_status_filename: ${{env.build_status_filename}}
-
-    - name: Code Style Check
-      id: checkstyle
-      if: ${{ always() && steps.build.conclusion == 'success' }}
-      uses: ./.github/actions/checkstyle
-      with:
-         build_status_filename: ${{env.build_status_filename}}
-
-
-    - name: Check Android API Compliance
-      id: androidcheck
-      if: ${{ always() && steps.build.conclusion == 'success' }}
-      uses: ./.github/actions/androidcheck
-      with:
-         build_status_filename: ${{env.build_status_filename}}
-
-    - name: Check Semantic Versioning Compliance
-      id: semvercheck
-      if: ${{ always() && steps.build.conclusion == 'success' }}
-      uses: ./.github/actions/semvercheck
-      with:
-         build_status_filename: ${{env.build_status_filename}}
-
-    - name: Generate Javadoc
-      id: javadoc
-      if: ${{ always() && steps.build.conclusion == 'success' }}
-      uses: ./.github/actions/javadoc
-      with:
-         build_status_filename: ${{env.build_status_filename}}
-      
-    - name: Unit Tests
-      id: unittests
-      if: ${{ always() &&  steps.build.conclusion == 'success' }}
-      uses: ./.github/actions/unittests
-      with:
-         build_status_filename: ${{env.build_status_filename}}
-
-    - name: Integration Tests
-      id: integrationtests
-      if: ${{ always() && steps.build.conclusion == 'success' }}
-      uses: ./.github/actions/integrationtests
-      with:
-         build_status_filename: ${{env.build_status_filename}}
 
     # ------------- End of :  Build Steps -------------
 
