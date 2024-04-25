@@ -30,6 +30,9 @@ jobs:
         jobstep: [nomerge,sortpom,formatter,build,buildstatus]
 
     steps:
+      - name: Display context
+        run: echo "$GITHUB_CONTEXT"
+    
       - name: Download Build Status Archive
         uses: actions/download-artifact@v4
         with:
