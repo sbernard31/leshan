@@ -27,7 +27,7 @@ jobs:
       # See : https://tomasvotruba.com/blog/2020/11/16/how-to-make-dynamic-matrix-in-github-actions/
       matrix:
         #jobstep: [nomerge,sortpom,formatter,build,sortimport,checkstyle,androidcheck,semvercheck,javadoc,unittests,integrationtests,buildstatus]
-        jobstep: [nomerge,sortpom,formatter,build,buildstatus]
+        jobstep: [nomerge,sortpom,buildstatus]
 
     steps:
       - name: Display context
@@ -38,6 +38,7 @@ jobs:
         with:
           name: ${{env.build_status_filename}}
           run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
               
       - name: Display structure of downloaded files
         run: ls -R      

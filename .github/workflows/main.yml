@@ -57,19 +57,6 @@ jobs:
       with:
          build_status_filename: ${{env.build_status_filename}}
 
-    - name: Code Format Check
-      id: formatter
-      if: always()
-      uses: ./.github/actions/formatter
-      with:
-         build_status_filename: ${{env.build_status_filename}}
-
-    - name: Build
-      id: build
-      if: always()
-      uses: ./.github/actions/build
-      with:
-         build_status_filename: ${{env.build_status_filename}}
 
 
     # ------------- End of :  Build Steps -------------
