@@ -24,6 +24,7 @@ import org.eclipse.leshan.core.util.datatype.ULong;
 public enum CertificateUsage {
     CA_CONSTRAINT(0), SERVICE_CERTIFICATE_CONSTRAINT(1), TRUST_ANCHOR_ASSERTION(2), DOMAIN_ISSUER_CERTIFICATE(3);
 
+    // just to trigger build
     public final ULong code;
 
     private CertificateUsage(int code) {
