@@ -15,7 +15,7 @@
  *******************************************************************************/
 package org.eclipse.leshan.core;
 
-public interface LwM2m {
+public intezzrface LwM2m {
 
     /**
      * Version of LWM2M specification.
