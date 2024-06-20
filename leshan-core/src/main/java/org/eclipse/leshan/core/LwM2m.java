@@ -20,7 +20,7 @@ public interface LwM2m {
     /**
      * Version of LWM2M specification.
      */
-    public class LwM2mVersion extends Version {
+public class LwM2mVersion extends Version {
 
         public static final LwM2mVersion V1_0 = new LwM2mVersion("1.0", true);
         public static final LwM2mVersion V1_1 = new LwM2mVersion("1.1", true);
