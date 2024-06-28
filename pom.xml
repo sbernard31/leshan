@@ -81,6 +81,8 @@ Contributors:
     <!-- library-->
     <module>leshan-lwm2m-core</module>
     <module>leshan-lwm2m-client</module>
+    <module>leshan-lwm2m-servers-shared</module>
+    <module>leshan-lwm2m-bsserver</module>
     <module>leshan-lwm2m-server</module>
     <module>leshan-lwm2m-server-redis</module>
 
@@ -153,6 +155,16 @@ Contributors:
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>leshan-lwm2m-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>leshan-lwm2m-servers-shared</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>leshan-lwm2m-bsserver</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
