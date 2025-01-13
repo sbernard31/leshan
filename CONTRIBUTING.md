@@ -1,5 +1,3 @@
-=== MERGED===
-
 # Guide to contributing
 
 If you plan to contribute to Leshan please take few minutes to read our [Contribution Guide](https://github.com/eclipse/leshan/wiki/How-to-contribute).
