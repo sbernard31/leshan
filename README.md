@@ -1,3 +1,6 @@
+
+===== MERGED ======
+
 ![Leshan](https://eclipse.org/leshan/img/multicolor-leshan.png)
 
 [Eclipse Leshan™](https://eclipse.org/leshan) is an OMA Lightweight M2M server and client Java implementation.
